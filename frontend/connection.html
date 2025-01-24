@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <style>
+        body {
+            padding: 20px;
+        }
+        .key-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .value-panel {
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="input-field col s6">
+                <input id="key" type="text">
+                <label for="key">Key</label>
+            </div>
+            <div class="input-field col s6">
+                <input id="value" type="text">
+                <label for="value">Value</label>
+            </div>
+        </div>
+        <div class="row">
+            <button class="btn waves-effect waves-light" id="addKey">Add Key</button>
+        </div>
+
+        <div class="row">
+            <input id="search" type="text" placeholder="Search keys..." class="input-field">
+        </div>
+
+        <ul class="collection key-list" id="keysList">
+            <!-- Keys will be dynamically populated here -->
+        </ul>
+
+        <div class="value-panel" id="valuePanel" style="display: none;">
+            <h5>Key Value</h5>
+            <p id="keyValue"></p>
+        </div>
+    </div>
+
+    <script>
+        const apiBase = 'http://localhost:8080/api/keys';
+
+         async function fetchKeys(searchTerm = '') {
+            try {
+                const response = await axios.get(apiBase);
+                const keys = response.data;
+                const filteredKeys = keys.filter((key) => key.includes(searchTerm));
+                console.log("Test--"+filteredKeys)
+                renderKeys(filteredKeys);
+            } catch (error) {
+                console.error('Error fetching keys:', error);
+            }
+        }
+
+        function renderKeys(keys) {
+            const keysList = document.getElementById('keysList');
+            keysList.innerHTML = '';
+            keys.forEach((key) => {
+                const listItem = document.createElement('li');
+                listItem.className = 'collection-item';
+                listItem.innerHTML = `
+                    <span><strong>${key}</strong></span>
+                    <button class="btn-small waves-effect waves-light red right" onclick="deleteKey('${key}')">Delete</button>
+                    <button class="btn-small waves-effect waves-light green right" onclick="fetchKeyValue('${key}')">View Value</button>
+                `;
+                keysList.appendChild(listItem);
+            });
+        }
+
+        async function fetchKeyValue(key) {
+            try {
+                const response = await axios.get(`${apiBase}/${key}`);
+                const value = response.data;
+
+                // Display value in the panel
+                const valuePanel = document.getElementById('valuePanel');
+                const keyValue = document.getElementById('keyValue');
+                keyValue.textContent = `Key: ${key}\nValue: ${value}`;
+                valuePanel.style.display = 'block';
+            } catch (error) {
+                console.error('Error fetching key value:', error);
+            }
+        }
+
+        async function addKey() {
+            const key = document.getElementById('key').value;
+            const value = document.getElementById('value').value;
+            if (!key || !value) {
+                alert('Key and Value are required');
+                return;
+            }
+
+            try {
+                await axios.post(`${apiBase}?key=${key}&value=${value}`);
+                document.getElementById('key').value = '';
+                document.getElementById('value').value = '';
+                fetchKeys();
+            } catch (error) {
+                console.error('Error adding key:', error);
+            }
+        }
+
+        async function deleteKey(key) {
+            try {
+                await axios.delete(`${apiBase}/${key}`);
+                fetchKeys();
+            } catch (error) {
+                console.error('Error deleting key:', error);
+            }
+        }
+
+        document.getElementById('addKey').addEventListener('click', addKey);
+        document.getElementById('search').addEventListener('input', (e) => fetchKeys(e.target.value));
+
+        // Initial fetch
+        fetchKeys();
+
+        // Fetch keys every 30 seconds
+        setTimeout(() => {
+          fetchKeys()
+            .then(response => response.json())
+            .then(data => console.log(data))
+            .catch(() => setTimeout(fetchKeys, 30000));
+        }, 20000);
+    </script>
+</body>
+</html>
+
