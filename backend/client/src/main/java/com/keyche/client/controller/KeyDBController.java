@@ -1,8 +1,11 @@
 package com.keyche.client.controller;
 
+import com.keyche.client.dto.CacheKeyDTO;
 import com.keyche.client.service.RedisService;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/keys")
@@ -23,21 +26,17 @@ public class KeyDBController {
     }
 
     @PostMapping
-    public void addKey(@RequestParam String key, @RequestParam String value, @RequestParam String host, @RequestParam int port) {
-        redisTemplate = redisService.getConnection(host, port);
+    public void addKey(@RequestBody CacheKeyDTO cacheKeyDTO) {
+        redisTemplate = redisService.getConnection(cacheKeyDTO.getHost(), cacheKeyDTO.getPort());
         if (redisTemplate == null) {
-            throw new RuntimeException("RedisTemplate is null for host: " + host + " and port: " + port);
+            throw new RuntimeException("RedisTemplate is null for host: " + cacheKeyDTO.getHost() + " and port: " + cacheKeyDTO.getPort());
         }
-        redisTemplate.opsForValue().set(key, value);
+        redisTemplate.opsForValue().set(cacheKeyDTO.getKey(), cacheKeyDTO.getValue());
     }
 
     @GetMapping("/{key}")
-    public Object getKey(@PathVariable String key, @RequestParam String host, @RequestParam int port) {
-        redisTemplate = redisService.getConnection(host, port);
-        if (redisTemplate == null) {
-            throw new RuntimeException("RedisTemplate is null for host: " + host + " and port: " + port);
-        }
-        return redisTemplate.opsForValue().get(key);
+    public Map<String, Object> getKey(@PathVariable String key, @RequestParam String host, @RequestParam int port) {
+        return redisService.getKeyDetails(key, host, port);
     }
 
     @DeleteMapping("/{key}")

@@ -1,10 +1,12 @@
 package com.keyche.client.controller;
 
+import com.keyche.client.dto.ConnectionDTO;
 import com.keyche.client.dto.RedisConnectionRequest;
 import com.keyche.client.service.RedisService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -20,7 +22,7 @@ public class ConnectionController {
     @PostMapping("/connect")
     public ResponseEntity<?> connectToRedis(@RequestBody RedisConnectionRequest request) {
         try {
-            redisService.addConnection(request.getHost(), request.getPort(), request.getPassword());
+            redisService.addConnection(request);
             return ResponseEntity.ok(Map.of("message", "Connected to Redis successfully!"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -28,7 +30,7 @@ public class ConnectionController {
     }
 
     @GetMapping("/list")
-    public ResponseEntity<?> listConnections() {
+    public ResponseEntity<List<ConnectionDTO>> listConnections() {
         return ResponseEntity.ok(redisService.listConnections());
     }
 
