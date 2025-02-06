@@ -45,7 +45,7 @@ bash
 
 CopyEdit
 
-`git clone https://github.com/your-username/keyche.git  
+`git clone https://github.com/Keyche/keyche.git  
 cd keyche`
 
 Install dependencies:
