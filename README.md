@@ -64,7 +64,7 @@ CopyEdit
 
 `npm start`
 
-Visit `http://localhost:3000` in your browser to start using Keyche!
+Visit `http://localhost:5173` in your browser to start using Keyche!
 
 ----------
 
